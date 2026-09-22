@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Order of Operations Detective Agency</title>
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --card: #ffffff;
+    --text: #22201c;
+    --text-secondary: #5a564e;
+    --border: #e2ded4;
+    --purple: #534AB7; --purple-bg: #EEEDFE; --purple-text: #3C3489;
+    --teal: #0F6E56; --teal-bg: #E1F5EE; --teal-text: #085041;
+    --coral: #993C1D; --coral-bg: #FAECE7; --coral-text: #712B13;
+    --blue: #185FA5; --blue-bg: #E6F1FB; --blue-text: #0C447C;
+    --green-bg: #EAF3DE; --green-text: #27500A;
+    --red-bg: #FCEBEB; --red-text: #791F1F;
+    --radius: 14px;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1b19;
+      --card: #262420;
+      --text: #f2f0ec;
+      --text-secondary: #b8b4aa;
+      --border: #3a3730;
+      --purple-bg: #2c2a4a; --purple-text: #cec9f2;
+      --teal-bg: #16332b; --teal-text: #9fe1cb;
+      --coral-bg: #3a2419; --coral-text: #f0997b;
+      --blue-bg: #16283a; --blue-text: #85b7eb;
+      --green-bg: #22300f; --green-text: #c0dd97;
+      --red-bg: #3a1919; --red-text: #f09595;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1b19; --card: #262420; --text: #f2f0ec; --text-secondary: #b8b4aa; --border: #3a3730;
+    --purple-bg: #2c2a4a; --purple-text: #cec9f2;
+    --teal-bg: #16332b; --teal-text: #9fe1cb;
+    --coral-bg: #3a2419; --coral-text: #f0997b;
+    --blue-bg: #16283a; --blue-text: #85b7eb;
+    --green-bg: #22300f; --green-text: #c0dd97;
+    --red-bg: #3a1919; --red-text: #f09595;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body { min-height: 100%; padding: 1.5rem 1rem 3rem; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 26px; font-weight: 700; margin: 0 0 4px; }
+  .subtitle { color: var(--text-secondary); font-size: 15px; margin: 0 0 1.5rem; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+  .tab-btn {
+    flex: 1; padding: 10px 12px; font-size: 15px; font-weight: 600; cursor: pointer;
+    background: none; border: none; color: var(--text-secondary);
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+  }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--purple); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .rule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .rule-card { border-radius: var(--radius); padding: 12px 14px; }
+  .rule-card .letter { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+  .rule-card .name { font-size: 13px; font-weight: 600; }
+  .rule-card .desc { font-size: 12px; margin-top: 4px; opacity: 0.9; }
+  .rc-p { background: var(--purple-bg); color: var(--purple-text); }
+  .rc-e { background: var(--teal-bg); color: var(--teal-text); }
+  .rc-md { background: var(--coral-bg); color: var(--coral-text); }
+  .rc-as { background: var(--blue-bg); color: var(--blue-text); }
+
+  .callout {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px 16px; margin-bottom: 1.5rem; font-size: 14px; color: var(--text-secondary);
+  }
+  .callout strong { color: var(--text); }
+
+  .case-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.25rem; margin-bottom: 1rem;
+  }
+  .case-select { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.25rem; }
+  .case-select button {
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text-secondary); font-size: 13px; cursor: pointer;
+  }
+  .case-select button.active { background: var(--purple); color: white; border-color: var(--purple); }
+
+  .expr-display {
+    font-size: 26px; font-weight: 700; text-align: center; padding: 1rem 0.5rem;
+    background: var(--bg); border-radius: 10px; margin-bottom: 1rem; letter-spacing: 0.5px;
+  }
+  .step-question { font-size: 15px; font-weight: 600; margin-bottom: 12px; text-align: center; }
+  .option-list { display: flex; flex-direction: column; gap: 8px; }
+  .option-btn {
+    display: block; width: 100%; text-align: left; padding: 12px 14px; font-size: 16px;
+    font-weight: 600; border-radius: 10px; border: 2px solid var(--border); background: var(--card);
+    color: var(--text); cursor: pointer;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--purple); }
+  .option-btn.correct { background: var(--green-bg); border-color: var(--teal); color: var(--green-text); }
+  .option-btn.wrong { background: var(--red-bg); border-color: #c0504d; color: var(--red-text); }
+  .option-btn:disabled { cursor: default; opacity: 0.85; }
+
+  .feedback { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 14px; }
+  .feedback.ok { background: var(--green-bg); color: var(--green-text); }
+  .feedback.tip { background: var(--blue-bg); color: var(--blue-text); }
+
+  .action-row { display: flex; justify-content: flex-end; margin-top: 14px; }
+  .primary-btn {
+    background: var(--purple); color: white; border: none; padding: 10px 18px;
+    border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .primary-btn:hover { opacity: 0.9; }
+  .ghost-btn {
+    background: none; color: var(--text-secondary); border: 1px solid var(--border);
+    padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+
+  .solved-banner {
+    text-align: center; padding: 1.5rem; background: var(--green-bg); color: var(--green-text);
+    border-radius: var(--radius); font-size: 16px; font-weight: 700;
+  }
+
+  .quiz-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--text-secondary); }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin-bottom: 1.25rem; }
+  .progress-fill { height: 100%; background: var(--purple); border-radius: 999px; transition: width 0.25s; }
+  .score-summary { text-align: center; }
+  .score-num { font-size: 40px; font-weight: 700; margin: 0.5rem 0; }
+  .score-msg { font-size: 16px; font-weight: 600; margin-bottom: 1rem; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2 class="sr-only">Interactive order of operations (PEMDAS) learning tool with a step-by-step case simulator and a 10-question practice quiz.</h2>
+  <h1>Order of Operations Detective Agency</h1>
+  <p class="subtitle">Crack the case: figure out which operation to solve first, every time.</p>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-learn-btn" onclick="switchTab('learn')">Learn the rules</button>
+    <button class="tab-btn" id="tab-practice-btn" onclick="switchTab('practice')">Practice cases</button>
+  </div>
+
+  <div class="panel active" id="panel-learn">
+    <div class="rule-grid">
+      <div class="rule-card rc-p"><div class="letter">P</div><div class="name">Parentheses</div><div class="desc">( ), [ ], { } — solve inside first</div></div>
+      <div class="rule-card rc-e"><div class="letter">E</div><div class="name">Exponents</div><div class="desc">powers, like 3&sup2;</div></div>
+      <div class="rule-card rc-md"><div class="letter">MD</div><div class="name">Multiply / Divide</div><div class="desc">same rank &mdash; left to right</div></div>
+      <div class="rule-card rc-as"><div class="letter">AS</div><div class="name">Add / Subtract</div><div class="desc">same rank &mdash; left to right</div></div>
+    </div>
+    <div class="callout">
+      <strong>The trap most detectives fall into:</strong> PEMDAS isn't four separate steps &mdash; it's really four levels, and two of them are tied pairs. Multiplication doesn't automatically beat division, and addition doesn't automatically beat subtraction. Whichever one of the pair comes first when reading left to right, goes first.
+    </div>
+
+    <div class="case-card">
+      <div class="case-select" id="case-select"></div>
+      <div class="expr-display" id="learn-expr">3 + 4 &times; 2</div>
+      <div id="learn-step-body"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-practice">
+    <div class="quiz-top">
+      <span id="quiz-progress-label">Case 1 of 10</span>
+      <span id="quiz-score-label">Score: 0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="quiz-progress-fill" style="width:10%"></div></div>
+    <div class="case-card" id="quiz-card"></div>
+  </div>
+</div>
+
+<script>
+var learnProblems = [
+  { title: "3 + 4 \u00D7 2", steps: [
+    { type: "choice", expr: "3 + 4 \u00D7 2", question: "Which part should you solve first?",
+      options: [ {text:"3 + 4", correct:false}, {text:"4 \u00D7 2", correct:true} ],
+      rule: "Multiplication (M)", resultExpr: "3 + 8", explain: "4 \u00D7 2 = 8, so the expression becomes 3 + 8." },
+    { type: "final", expr: "3 + 8", rule: "Addition (A)", answer: "11", explain: "3 + 8 = 11. Case closed!" }
+  ]},
+  { title: "(3 + 4) \u00D7 2", steps: [
+    { type: "choice", expr: "(3 + 4) \u00D7 2", question: "Which part should you solve first?",
+      options: [ {text:"(3 + 4)", correct:true}, {text:"4 \u00D7 2", correct:false} ],
+      rule: "Parentheses (P)", resultExpr: "7 \u00D7 2", explain: "Parentheses always go first: 3 + 4 = 7, so it becomes 7 \u00D7 2." },
+    { type: "final", expr: "7 \u00D7 2", rule: "Multiplication (M)", answer: "14", explain: "7 \u00D7 2 = 14. Case closed!" }
+  ]},
+  { title: "2\u00B3 + 4 \u00D7 5", steps: [
+    { type: "choice", expr: "2\u00B3 + 4 \u00D7 5", question: "Which part should you solve first?",
+      options: [ {text:"2\u00B3", correct:true}, {text:"4 \u00D7 5", correct:false} ],
+      rule: "Exponents (E)", resultExpr: "8 + 4 \u00D7 5", explain: "2\u00B3 = 8, so it becomes 8 + 4 \u00D7 5." },
+    { type: "choice", expr: "8 + 4 \u00D7 5", question: "Now which part?",
+      options: [ {text:"8 + 4", correct:false}, {text:"4 \u00D7 5", correct:true} ],
+      rule: "Multiplication (M)", resultExpr: "8 + 20", explain: "4 \u00D7 5 = 20, so it becomes 8 + 20." },
+    { type: "final", expr: "8 + 20", rule: "Addition (A)", answer: "28", explain: "8 + 20 = 28. Case closed!" }
+  ]},
+  { title: "10 - 2 \u00D7 3 + 4", steps: [
+    { type: "choice", expr: "10 - 2 \u00D7 3 + 4", question: "Which part should you solve first?",
+      options: [ {text:"10 - 2", correct:false}, {text:"2 \u00D7 3", correct:true}, {text:"3 + 4", correct:false} ],
+      rule: "Multiplication (M)", resultExpr: "10 - 6 + 4", explain: "2 \u00D7 3 = 6, so it becomes 10 - 6 + 4." },
+    { type: "choice", expr: "10 - 6 + 4", question: "Addition and subtraction are tied \u2014 which comes first reading left to right?",
+      options: [ {text:"10 - 6", correct:true}, {text:"6 + 4", correct:false} ],
+      rule: "Subtraction (left to right)", resultExpr: "4 + 4", explain: "Since - comes before + when reading left to right, do it first: 10 - 6 = 4, so it becomes 4 + 4." },
+    { type: "final", expr: "4 + 4", rule: "Addition (A)", answer: "8", explain: "4 + 4 = 8. Case closed!" }
+  ]},
+  { title: "(8 - 3)\u00B2 \u00F7 5", steps: [
+    { type: "choice", expr: "(8 - 3)\u00B2 \u00F7 5", question: "Which part should you solve first?",
+      options: [ {text:"(8 - 3)", correct:true}, {text:"3\u00B2 \u00F7 5", correct:false} ],
+      rule: "Parentheses (P)", resultExpr: "5\u00B2 \u00F7 5", explain: "8 - 3 = 5, so it becomes 5\u00B2 \u00F7 5." },
+    { type: "choice", expr: "5\u00B2 \u00F7 5", question: "Now which part?",
+      options: [ {text:"5\u00B2", correct:true}, {text:"2 \u00F7 5", correct:false} ],
+      rule: "Exponents (E)", resultExpr: "25 \u00F7 5", explain: "5\u00B2 = 25, so it becomes 25 \u00F7 5." },
+    { type: "final", expr: "25 \u00F7 5", rule: "Division (D)", answer: "5", explain: "25 \u00F7 5 = 5. Case closed!" }
+  ]},
+  { title: "6 + 2 \u00D7 (5 - 3)\u00B2", steps: [
+    { type: "choice", expr: "6 + 2 \u00D7 (5 - 3)\u00B2", question: "Which part should you solve first?",
+      options: [ {text:"6 + 2", correct:false}, {text:"(5 - 3)", correct:true}, {text:"2 \u00D7 (5-3)", correct:false} ],
+      rule: "Parentheses (P)", resultExpr: "6 + 2 \u00D7 2\u00B2", explain: "5 - 3 = 2, so it becomes 6 + 2 \u00D7 2\u00B2." },
+    { type: "choice", expr: "6 + 2 \u00D7 2\u00B2", question: "Now which part?",
+      options: [ {text:"2\u00B2", correct:true}, {text:"2 \u00D7 2", correct:false} ],
+      rule: "Exponents (E)", resultExpr: "6 + 2 \u00D7 4", explain: "2\u00B2 = 4, so it becomes 6 + 2 \u00D7 4." },
+    { type: "choice", expr: "6 + 2 \u00D7 4", question: "Now which part?",
+      options: [ {text:"6 + 2", correct:false}, {text:"2 \u00D7 4", correct:true} ],
+      rule: "Multiplication (M)", resultExpr: "6 + 8", explain: "2 \u00D7 4 = 8, so it becomes 6 + 8." },
+    { type: "final", expr: "6 + 8", rule: "Addition (A)", answer: "14", explain: "6 + 8 = 14. Case closed!" }
+  ]}
+];
+
+var quizProblems = [
+  { expr: "8 + 2 \u00D7 5", choices: ["18","50","16","20"], correct: 0, explain: "Multiplication first: 2 \u00D7 5 = 10, then 8 + 10 = 18." },
+  { expr: "(6 - 2) \u00D7 3", choices: ["12","0","7","18"], correct: 0, explain: "Parentheses first: 6 - 2 = 4, then 4 \u00D7 3 = 12." },
+  { expr: "5 + 3\u00B2", choices: ["14","64","11","8"], correct: 0, explain: "Exponent first: 3\u00B2 = 9, then 5 + 9 = 14." },
+  { expr: "20 \u00F7 4 \u00D7 2", choices: ["10","2.5","8","40"], correct: 0, explain: "Multiply and divide are tied \u2014 left to right: 20 \u00F7 4 = 5, then 5 \u00D7 2 = 10." },
+  { expr: "12 - 4 + 2", choices: ["10","6","14","8"], correct: 0, explain: "Add and subtract are tied \u2014 left to right: 12 - 4 = 8, then 8 + 2 = 10." },
+  { expr: "2 \u00D7 (3 + 4)\u00B2", choices: ["98","100","49","14"], correct: 0, explain: "Parentheses first: 3 + 4 = 7. Then exponent: 7\u00B2 = 49. Then multiply: 2 \u00D7 49 = 98." },
+  { expr: "15 \u00F7 3 + 2 \u00D7 4", choices: ["13","28","12","20"], correct: 0, explain: "Do both multiply/divide first: 15 \u00F7 3 = 5 and 2 \u00D7 4 = 8. Then add: 5 + 8 = 13." },
+  { expr: "9 - 3 \u00D7 2 + 1", choices: ["4","13","10","7"], correct: 0, explain: "Multiply first: 3 \u00D7 2 = 6. Then left to right: 9 - 6 = 3, then 3 + 1 = 4." },
+  { expr: "(10 + 2) \u00F7 (3 - 1)", choices: ["6","11","4","8"], correct: 0, explain: "Both parentheses first: 10 + 2 = 12 and 3 - 1 = 2. Then divide: 12 \u00F7 2 = 6." },
+  { expr: "4\u00B2 - 2 \u00D7 (7 - 4)", choices: ["10","-2","12","22"], correct: 0, explain: "Parentheses: 7 - 4 = 3. Exponent: 4\u00B2 = 16. Multiply: 2 \u00D7 3 = 6. Then 16 - 6 = 10." }
+];
+
+function shuffleChoices(problem) {
+  var indices = [0,1,2,3];
+  for (var i = indices.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = indices[i]; indices[i] = indices[j]; indices[j] = t;
+  }
+  var newChoices = indices.map(function(i){ return problem.choices[i]; });
+  var newCorrect = indices.indexOf(problem.correct);
+  return { expr: problem.expr, choices: newChoices, correct: newCorrect, explain: problem.explain };
+}
+
+var currentCase = 0;
+var currentStepIndex = 0;
+var shuffledQuiz = [];
+var quizIndex = 0;
+var quizScore = 0;
+var quizAnswered = false;
+
+function switchTab(name) {
+  document.getElementById('panel-learn').classList.toggle('active', name === 'learn');
+  document.getElementById('panel-practice').classList.toggle('active', name === 'practice');
+  document.getElementById('tab-learn-btn').classList.toggle('active', name === 'learn');
+  document.getElementById('tab-practice-btn').classList.toggle('active', name === 'practice');
+}
+
+function buildCaseSelector() {
+  var container = document.getElementById('case-select');
+  container.innerHTML = '';
+  learnProblems.forEach(function(p, i) {
+    var btn = document.createElement('button');
+    btn.textContent = 'Case ' + (i + 1);
+    btn.className = i === currentCase ? 'active' : '';
+    btn.onclick = function() { currentCase = i; currentStepIndex = 0; renderLearnStep(); buildCaseSelector(); };
+    container.appendChild(btn);
+  });
+}
+
+function renderLearnStep() {
+  var problem = learnProblems[currentCase];
+  document.getElementById('learn-expr').textContent = problem.title;
+  var body = document.getElementById('learn-step-body');
+  body.innerHTML = '';
+
+  if (currentStepIndex >= problem.steps.length) {
+    var banner = document.createElement('div');
+    banner.className = 'solved-banner';
+    banner.textContent = 'Case solved! Nice detective work.';
+    body.appendChild(banner);
+    var row = document.createElement('div');
+    row.className = 'action-row';
+    var btn = document.createElement('button');
+    btn.className = 'primary-btn';
+    btn.textContent = 'Next case';
+    btn.onclick = function() {
+      currentCase = (currentCase + 1) % learnProblems.length;
+      currentStepIndex = 0;
+      renderLearnStep();
+      buildCaseSelector();
+    };
+    row.appendChild(btn);
+    body.appendChild(row);
+    return;
+  }
+
+  var step = problem.steps[currentStepIndex];
+  var exprBox = document.createElement('div');
+  exprBox.className = 'expr-display';
+  exprBox.style.fontSize = '22px';
+  exprBox.textContent = step.expr;
+  body.appendChild(exprBox);
+
+  if (step.type === 'final') {
+    var q = document.createElement('div');
+    q.className = 'step-question';
+    q.textContent = 'Only one step left \u2014 finish it.';
+    body.appendChild(q);
+    var revealBtn = document.createElement('button');
+    revealBtn.className = 'primary-btn';
+    revealBtn.style.display = 'block';
+    revealBtn.style.margin = '0 auto';
+    revealBtn.textContent = 'Reveal the answer';
+    var revealed = false;
+    revealBtn.onclick = function() {
+      if (revealed) return;
+      revealed = true;
+      var fb = document.createElement('div');
+      fb.className = 'feedback ok';
+      fb.innerHTML = '<strong>' + step.rule + ':</strong> ' + step.explain;
+      body.appendChild(fb);
+      var row = document.createElement('div');
+      row.className = 'action-row';
+      var nextBtn = document.createElement('button');
+      nextBtn.className = 'primary-btn';
+      nextBtn.textContent = 'Continue';
+      nextBtn.onclick = function() { currentStepIndex++; renderLearnStep(); };
+      row.appendChild(nextBtn);
+      body.appendChild(row);
+      revealBtn.disabled = true;
+    };
+    body.appendChild(revealBtn);
+    return;
+  }
+
+  var question = document.createElement('div');
+  question.className = 'step-question';
+  question.textContent = step.question;
+  body.appendChild(question);
+
+  var list = document.createElement('div');
+  list.className = 'option-list';
+  var answered = false;
+  var wrongCount = 0;
+
+  step.options.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt.text;
+    btn.onclick = function() {
+      if (answered) return;
+      if (opt.correct) {
+        answered = true;
+        btn.classList.add('correct');
+        Array.prototype.forEach.call(list.children, function(b){ b.disabled = true; });
+        var fb = document.createElement('div');
+        fb.className = 'feedback ok';
+        fb.innerHTML = '<strong>' + step.rule + ':</strong> ' + step.explain;
+        body.appendChild(fb);
+        var row = document.createElement('div');
+        row.className = 'action-row';
+        var nextBtn = document.createElement('button');
+        nextBtn.className = 'primary-btn';
+        nextBtn.textContent = 'Continue';
+        nextBtn.onclick = function() { currentStepIndex++; renderLearnStep(); };
+        row.appendChild(nextBtn);
+        body.appendChild(row);
+      } else {
+        wrongCount++;
+        btn.classList.add('wrong');
+        btn.disabled = true;
+        var tip = document.createElement('div');
+        tip.className = 'feedback tip';
+        tip.textContent = wrongCount >= 2
+          ? 'Hint: check for parentheses first, then exponents, then multiplication or division.'
+          : 'Not quite \u2014 try another option.';
+        body.appendChild(tip);
+      }
+    };
+    list.appendChild(btn);
+  });
+  body.appendChild(list);
+}
+
+function startQuiz() {
+  shuffledQuiz = quizProblems.map(shuffleChoices);
+  quizIndex = 0;
+  quizScore = 0;
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+  document.getElementById('quiz-progress-label').textContent = 'Case ' + (quizIndex + 1) + ' of ' + shuffledQuiz.length;
+  document.getElementById('quiz-score-label').textContent = 'Score: ' + quizScore;
+  document.getElementById('quiz-progress-fill').style.width = (((quizIndex) / shuffledQuiz.length) * 100) + '%';
+
+  var card = document.getElementById('quiz-card');
+  card.innerHTML = '';
+
+  if (quizIndex >= shuffledQuiz.length) {
+    document.getElementById('quiz-progress-fill').style.width = '100%';
+    var pct = Math.round((quizScore / shuffledQuiz.length) * 100);
+    var msg;
+    if (pct >= 90) msg = 'Order of Operations Master!';
+    else if (pct >= 70) msg = 'Solid detective work!';
+    else msg = 'Keep investigating \u2014 review the case files above!';
+    var summary = document.createElement('div');
+    summary.className = 'score-summary';
+    summary.innerHTML = '<div class="score-num">' + quizScore + ' / ' + shuffledQuiz.length + '</div>' +
+      '<div class="score-msg">' + msg + '</div>';
+    card.appendChild(summary);
+    var row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'center';
+    var btn = document.createElement('button');
+    btn.className = 'primary-btn';
+    btn.textContent = 'Try again';
+    btn.onclick = startQuiz;
+    row.appendChild(btn);
+    card.appendChild(row);
+    return;
+  }
+
+  quizAnswered = false;
+  var problem = shuffledQuiz[quizIndex];
+  var exprBox = document.createElement('div');
+  exprBox.className = 'expr-display';
+  exprBox.textContent = problem.expr + ' = ?';
+  card.appendChild(exprBox);
+
+  var list = document.createElement('div');
+  list.className = 'option-list';
+  problem.choices.forEach(function(choiceText, i) {
+    var btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = choiceText;
+    btn.onclick = function() {
+      if (quizAnswered) return;
+      quizAnswered = true;
+      Array.prototype.forEach.call(list.children, function(b, bi) {
+        b.disabled = true;
+        if (bi === problem.correct) b.classList.add('correct');
+        else if (bi === i) b.classList.add('wrong');
+      });
+      if (i === problem.correct) quizScore++;
+      document.getElementById('quiz-score-label').textContent = 'Score: ' + quizScore;
+      var fb = document.createElement('div');
+      fb.className = 'feedback ' + (i === problem.correct ? 'ok' : 'tip');
+      fb.textContent = problem.explain;
+      card.appendChild(fb);
+      var row = document.createElement('div');
+      row.className = 'action-row';
+      var nextBtn = document.createElement('button');
+      nextBtn.className = 'primary-btn';
+      nextBtn.textContent = quizIndex === shuffledQuiz.length - 1 ? 'See results' : 'Next case';
+      nextBtn.onclick = function() { quizIndex++; renderQuizQuestion(); };
+      row.appendChild(nextBtn);
+      card.appendChild(row);
+    };
+    list.appendChild(btn);
+  });
+  card.appendChild(list);
+}
+
+buildCaseSelector();
+renderLearnStep();
+startQuiz();
+</script>
+</body>
+</html>
